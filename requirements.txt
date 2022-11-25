@@ -1,0 +1,11 @@
+streamlit
+pandas
+pickle
+time
+random
+matplotlib
+seaborn
+keras
+tensorflow
+librosa
+numpy
