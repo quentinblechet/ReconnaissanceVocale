@@ -12,8 +12,6 @@ from tensorflow.keras import layers
 import librosa
 import numpy as np
 from librosa import stft
-from PIL import Image
-from IPython.display import Audio
 
 RECORD = """
 const sleep  = time => new Promise(resolve => setTimeout(resolve, time))
@@ -360,9 +358,8 @@ def page_reco_vocal():
 
 def page_preprocessing():
     st.title("Preprocessing")
-    image2 = Image.open('Images/image2.png')
     st.header("Etapes d'obtention d'un spectrogramme")
-    st.image(image2)
+    st.image('Images/image2.png')
 
     st.write("""
          - Transformation de la pression acoustique en signal analogique puis conversion en signal numérique
@@ -370,18 +367,16 @@ def page_preprocessing():
          - Division du son en fenêtres temporelles permettant une représentation tridimensionnelles du signal via le spectrogramme
 
          """)
-    image3 = Image.open('Images/image3.png')
-    image4 = Image.open('Images/image4.png')
     st.header("Spectrogramme de MEL")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.image(image3)
+        st.image('Images/image3.png')
         st.subheader("Spectrogramme standard")
 
     with col2:
-        st.image(image4)
+        st.image('Images/image4.png')
         st.subheader(
             "Spectrogramme de MEL basé sur la perception humaine des fréquences")
 
@@ -393,24 +388,19 @@ def page_augmentation():
         ('Pas de transformations', 'Bruit Blanc', 'Time Shifting', 'Time Stretching', 'Pitching'))
     if option == 'Pas de transformations':
         st.audio('Audio/standard.mp3')
-        image01 = Image.open('Images/standard.png')
-        st.image(image01)
+        st.image('Images/standard.png')
     if option == 'Bruit Blanc':
         st.audio('Audio/Bruit blanc.mp3')
-        image02 = Image.open('Images/Bruit blanc.png')
-        st.image(image02)
+        st.image('Images/Bruit blanc.png')
     if option == 'Time Shifting':
         st.audio('Audio/shifting.mp3')
-        image03 = Image.open('Images/shifting.png')
-        st.image(image03)
+        st.image('Images/shifting.png')
     if option == 'Time Stretching':
         st.audio('Audio/stretching.mp3')
-        image04 = Image.open('Images/stretching.png')
-        st.image(image04)
+        st.image('Images/stretching.png')
     if option == 'Pitching':
         st.audio('Audio/Pitching.mp3')
-        image05 = Image.open('Images/Pitching.png')
-        st.image(image05)
+        st.image('Images/Pitching.png')
 
 
 def page_jeu_données():
@@ -536,28 +526,17 @@ def page_isolation_speaker():
 
 
 def page_resultat_isolation():
-    list_folder = ["models_normal/", "models_noise/",
-                   "models_shift/", "models_pitch/", "models_augmented/"]
-    list_model = ["history_model_v10_1.pickle", "history_model_v10_2.pickle", "history_model_v10_3.pickle",
-                  "history_model_v10_4.pickle", "history_model_v10_5.pickle", "history_model_v10_6.pickle"]
-
-    models = []
-    for folder in list_folder:
-        for model in list_model:
-            with open(folder + model, "rb") as hist:
-                history = pickle.load(hist)
-            models.append(history)
-
-    history = []
-    for model in models:
-        history.append(model.history)
-
     col3, col4 = st.columns(2)
 
     with col3:
         st.subheader("Résultats\n")
         for hist in history:
-            st.write(hist['accuracy'])
+            st.write("Accuracy:")
+            st.write("- Modèle normal: 0.67")
+            st.write("- Modèle bruité: 0.68")
+            st.write("- Modèle shift: 0.80")
+            st.write("- Modèle pitch: 0.75")
+            st.write("- Modèle bruité + shift + pitch: 0.65")
 
     with col4:
         st.header("\n")
