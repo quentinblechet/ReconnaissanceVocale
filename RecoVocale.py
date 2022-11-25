@@ -873,7 +873,7 @@ def page_conclusion():
             - Autres configurations pre-processing/augmentation/modèle
             """)
         with col2:
-            st.image('audioData.jpg', width=400)
+            st.image('Images/audioData.jpg', width=400)
 
     st.markdown("##")
 
@@ -888,7 +888,7 @@ def page_conclusion():
                      - Métrique: mesure de la qualité des prédictions
                      """)
         with col2:
-            st.image('MLmetrics.jpg', width=400)
+            st.image('Images/MLmetrics.jpg', width=400)
 
     st.markdown("##")
 
@@ -899,7 +899,7 @@ def page_conclusion():
                      - Modèle de langage
                      """)
         with col2:
-            st.image("languageModel.png", width=400)
+            st.image("Images/languageModel.png", width=400)
 
     st.markdown("##")
 
