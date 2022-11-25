@@ -560,10 +560,10 @@ def page_demo_mot():
                 "Chiffre 6": "Audio/6_Quentin.wav", "Chiffre 7": "Audio/7_Quentin.wav",
                 "Chiffre 8": "Audio/8_Quentin.wav", "Chiffre 9": "Audio/8_Quentin.wav"}
 
-    option = st.selectbox("Sélectionnez un fichier audio à prédire ou importer en un",
+    option = st.selectbox("Sélectionnez un fichier audio à prédire",
                           ("Chiffre 0", "Chiffre 1", "Chiffre 2", "Chiffre 3",
                            "Chiffre 4", "Chiffre 5", "Chiffre 6", "Chiffre 7",
-                           "Chiffre 8", "Chiffre 9", "Importer un fichier"))
+                           "Chiffre 8", "Chiffre 9"))
 
     list_model = ["model_v10train_1.h5", "model_v10train_2.h5", "model_v10train_3.h5",
                   "model_v10train_4.h5", "model_v10train_5.h5", "model_v10train_6.h5"]
@@ -575,25 +575,7 @@ def page_demo_mot():
 
     wav_file = []
 
-    if option == "Importer un fichier":
-        upload = st.file_uploader("Fichier audio a prédire", type='wav')
-        if upload is not None:
-            wav_file.append(upload.name)
-
-            audio_file = open(wav_file[0], 'rb')
-            audio_bytes = audio_file.read()
-            st.audio(audio_bytes)
-
-            spectro_wav_file = [audioFile(filename, root_path='').normalizeLength(
-                2).logMelSpectrogram() for filename in wav_file]
-
-            spectro_wav_file = np.asarray(spectro_wav_file)
-            pred = voting_classifier(models, spectro_wav_file)
-
-            if st.button("Réalisez la prédiction"):
-                st.write("Résultat: " + pred[0])
-
-    else:
+    if option:
         wav_file.append(file_dic[option])
 
         audio_file = open(wav_file[0], 'rb')
