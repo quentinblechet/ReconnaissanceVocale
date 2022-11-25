@@ -344,9 +344,8 @@ def predict(model, filePath):
 
 def page_reco_vocal():
     st.title("Reconnaissance vocale")
-    image = Image.open('Images/image1.png')
     st.header("Fonctionnement de la reconnaissance vocale")
-    st.image(image)
+    st.image('Images/image1.png')
 
     st.write("""
              - Etude de 2 modèles :
@@ -530,13 +529,12 @@ def page_resultat_isolation():
 
     with col3:
         st.subheader("Résultats\n")
-        for hist in history:
-            st.write("Accuracy:")
-            st.write("- Modèle normal: 0.67")
-            st.write("- Modèle bruité: 0.68")
-            st.write("- Modèle shift: 0.80")
-            st.write("- Modèle pitch: 0.75")
-            st.write("- Modèle bruité + shift + pitch: 0.65")
+        st.write("Accuracy:")
+        st.write("- Modèle normal: 0.67")
+        st.write("- Modèle bruité: 0.68")
+        st.write("- Modèle shift: 0.80")
+        st.write("- Modèle pitch: 0.75")
+        st.write("- Modèle bruité + shift + pitch: 0.65")
 
     with col4:
         st.header("\n")
@@ -593,8 +591,7 @@ def page_demo_mot():
             pred = voting_classifier(models, spectro_wav_file)
 
             if st.button("Réalisez la prédiction"):
-                st.write("Résultat:\n")
-                st.write(pred[0])
+                st.write("Résultat: " + pred[0])
 
     else:
         wav_file.append(file_dic[option])
