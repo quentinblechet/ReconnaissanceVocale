@@ -1,6 +1,5 @@
 streamlit
 pandas
-time
 random
 matplotlib
 seaborn
