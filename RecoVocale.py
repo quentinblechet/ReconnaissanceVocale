@@ -13,36 +13,19 @@ import librosa
 import numpy as np
 from librosa import stft
 
-RECORD = """
-const sleep  = time => new Promise(resolve => setTimeout(resolve, time))
-const b2text = blob => new Promise(resolve => {
-  const reader = new FileReader()
-  reader.onloadend = e => resolve(e.srcElement.result)
-  reader.readAsDataURL(blob)
-})
-var record = time => new Promise(async resolve => {
-  stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-  recorder = new MediaRecorder(stream)
-  chunks = []
-  recorder.ondataavailable = e => chunks.push(e.data)
-  recorder.start()
-  await sleep(time)
-  recorder.onstop = async ()=>{
-    blob = new Blob(chunks)
-    text = await b2text(blob)
-    resolve(text)
-  }
-  recorder.stop()
-})
-"""
-
 
 class audioFile:
 
-    def __init__(self, filename, root_path=""):
+    def __init__(self, filename, normalize=False, root_path=""):
 
         self.audioSignal, self.samplingFrequency = librosa.load(
-            path=root_path + filename, sr=None)
+            path=filename, sr=None)
+
+        if normalize:
+            average = np.mean(self.audioSignal)
+            std_deviation = np.std(self.audioSignal)
+            self.audioSignal = (self.audioSignal - average)/std_deviation
+
         self.length = len(self.audioSignal)
 
     def spectrogram(self, dt=0.025):
@@ -208,6 +191,10 @@ def main():
         "Nicolas Hircq"
         "\n\n"
         "Philippe Moussa"
+        "\n\n"
+        "Mentor:"
+        "\n\n"
+        "Paul Lestrat"
     )
 
 
@@ -336,7 +323,7 @@ def CTC_loss(y_test, y_pred):
 
 
 def predict(model, filePath):
-    logMelSpectrogram = audioFile(filePath).subsample(3).normalizeLength(17) \
+    logMelSpectrogram = audioFile(filePath, normalize=True).subsample(3).normalizeLength(17) \
         .logMelSpectrogram(k_temp=.7, k_freq=1.5)
     logMelSpectrogram = np.array([(logMelSpectrogram)])
     return "prediction: " + decode_batch_predictions(model.predict(logMelSpectrogram))[0]
@@ -582,7 +569,7 @@ def page_demo_mot():
         audio_bytes = audio_file.read()
         st.audio(audio_bytes)
 
-        spectro_wav_file = [audioFile(filename, root_path='').normalizeLength(
+        spectro_wav_file = [audioFile(filename).normalizeLength(
             2).logMelSpectrogram() for filename in wav_file]
 
         spectro_wav_file = np.asarray(spectro_wav_file)
