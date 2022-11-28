@@ -581,29 +581,40 @@ def page_demo_mot():
 
 
 def page_ctc_loss():
+    
     st.title("CTC loss")
-    st.header("Aligner un spectrogramme et sa transcription?")
-
-    cats = ['Images/cat1.jpg', 'Images/cat2.jpg', 'Images/cat3.jpg']
-    placeholder = st.empty()
-
-    CTC = st.checkbox("CTC")
-
-    k = 0
-    while (not CTC):
-        rank = int(k % 3)
-        placeholder.image(cats[rank])
-        k += 1
-        time.sleep(1)
-
-    placeholder.image(cats[2])
-    st.header("""
-              CTC loss: principe
-              - Assigner une probabilité à chaque caractère par time-step
-              - Maximiser la probabilité des alignements compatibles avec la transcription
-              - Une contrainte: longueur de prédiction inférieure ou égale au nombre de time-steps
-              """)
-    st.image('Images/cat_ctc.jpg')
+    
+    col1, col2 = st.columns([3, 6])
+    
+    with col1:
+        st.markdown('#')
+        st.markdown('#')
+        st.markdown('#')
+        st.write("- Plutôt que de prédire 'le' bon alignement...")
+        st.markdown('#')
+        st.markdown('#')
+        st.markdown('#')
+        st.markdown('#')
+        CTC = st.checkbox("CTC: principe")     
+        if CTC:
+            st.write("""
+                     - ...Assigner une probabilité à chaque caractère par time-step
+                     - Maximiser la probabilité des alignements compatibles avec la transcription
+                     - Une contrainte: longueur de prédiction inférieure ou égale au nombre de time-steps
+                     """)        
+        
+     with col2:
+        st.image('Images/spectro.jpg', width=400)
+        cats = ['Images/script1.jpg', 'Images/sript2.jpg', 'Images/script3.jpg', 'Images/script4.jpg', 'Images/script5.jpg]
+        placeholder = st.empty()
+        k = 0
+        while (not CTC):
+            rank = int(k % 5)
+            placeholder.image(cats[rank], width=400)
+            k += 1
+            time.sleep(1)
+        if CTC:
+            st.image('Images/scripts.jpg', width=400)
 
 
 def page_explo_data():
@@ -629,34 +640,33 @@ def page_explo_data():
 
     df_full = pd.concat([df_train, df_test], axis=0)
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([4, 1])
 
     with col1:
         maxDuration = st.slider("duration (s)", min_value=0.0, max_value=25.0,
                                 step=.1)
-    with col2:
         timeStep = st.slider("time step (ms)", min_value=0.0, max_value=30.0, step=.5,
                              value=30.0)
-
-    fig = plt.figure(figsize=(15, 10))
-    plt.scatter(df_full[df_full['rootPath'] == rootPathTrain]['audio duration'],
+    with col2:
+        fig = plt.figure(figsize=(15, 10))
+        plt.scatter(df_full[df_full['rootPath'] == rootPathTrain]['audio duration'],
                 df_full[df_full['rootPath'] == rootPathTrain]['label length'], c='orange', label='train files')
-    plt.scatter(df_full[df_full['rootPath'] == rootPathTest]['audio duration'],
+        plt.scatter(df_full[df_full['rootPath'] == rootPathTest]['audio duration'],
                 df_full[df_full['rootPath'] == rootPathTest]['label length'], c='green', label='test files')
-    plt.legend(fontsize=12)
-    plt.xlim(left=0, right=35)
-    plt.ylim(bottom=0, top=530)
+        plt.legend(fontsize=12)
+        plt.xlim(left=0, right=35)
+        plt.ylim(bottom=0, top=530)
 
-    plt.vlines(x=maxDuration, ymin=0, ymax=530, colors='black')
-    plt.hlines(y=maxDuration/(.001*timeStep)/2,
+        plt.vlines(x=maxDuration, ymin=0, ymax=530, colors='black')
+        plt.hlines(y=maxDuration/(.001*timeStep)/2,
                xmin=0, xmax=35, colors='black')
-    plt.xlabel('audio duration (s)', fontsize=12)
-    plt.ylabel('label length (nb char)', fontsize=12)
-    plt.title('Label length vs audio duration', fontsize=24)
+        plt.xlabel('audio duration (s)', fontsize=12)
+        plt.ylabel('label length (nb char)', fontsize=12)
+        plt.title('Label length vs audio duration', fontsize=16)
 
-    plt.xlabel('audio duration (s)', fontsize=12)
-    plt.ylabel('label length (nb char)', fontsize=12)
-    st.pyplot(fig)
+        plt.xlabel('audio duration (s)', fontsize=12)
+        plt.ylabel('label length (nb char)', fontsize=12)
+        st.pyplot(fig)
 
 
 def page_modèle2():
@@ -739,55 +749,52 @@ def page_résultats2():
     precision_v12big = [df_results['v12big_' +
                                    str(k) + '_d'].mean() for k in range(1, 10)]
 
-    st.write("""A partir d'une configuration de base,
+    with st.expander("CTC loss sur échantillon de validation"):
+           
+        st.write("""A partir d'une configuration de base,
              nous avons testé plusieurs options en boucle courte:
              12 epochs, 800 train / 200 test.
-             Puis le 'champion' ainsi sélectionné a été entraîné
-             sur 9 epochs, 28 000 train / 2500 test.
+             Puis le 'champion' sélectionné a été entraîné
+             sur 9 epochs, 28 000 train / 2500 test. Enfin, nous avons mesuré la précision
+             de ses prédictions à l'aide d'une métrique basée sur la distance de Levenshtein.
              """)
+                
+        col1, col2, col3, col4 = st.columns(4, gap = "small")
+            with col1:    
+                baseline = st.checkbox('V0 Baseline validation loss - 800 train / 200 test')
+            with col2:
+                v12 = st.checkbox('V12 Champion validation loss - 800 train / 200 test')
+            with col3:
+                v12b = st.checkbox('V12 Champion validation loss - 28 000 train / 2 500 test')
+            with col4:
+                v12b_p = st.checkbox('V12 Champion precision - 28 000 train / 2 500 test')
 
-    with st.expander("CTC loss sur échantillon de validation"):
-
-        col1, col2, col3 = st.columns(3, gap="small")
+      col1, col2 = st.columns(2)
+        
         with col1:
-            baseline = st.checkbox('V0 Baseline - 800 train / 200 test')
+            fig = plt.figure()
+            if baseline:
+                plt.plot(history0, color = 'black', label = 'baseline')
+            if v12:
+                plt.plot(history12, color = 'grey', label = 'champion')
+            if v12b:
+                plt.plot(history12big, color = 'orange', label = 'champion - full training')
+            plt.legend(fontsize = 10)
+            plt.xlabel('epochs')
+            plt.ylabel('CTC loss')
+            plt.title("CTC loss on validation data", fontsize = 10)
+            st.pyplot(fig)
         with col2:
-            v12 = st.checkbox('V12 Champion - 800 train / 200 test')
-        with col3:
-            v12b = st.checkbox('V12 Champion - 28 000 train / 2 500 test')
-
-        fig = plt.figure()
-        if baseline:
-            plt.plot(history0, color='black', label='baseline')
-        if v12:
-            plt.plot(history12, color='grey', label='champion')
-        if v12b:
-            plt.plot(history12big, color='orange',
-                     label='champion - full training')
-        plt.legend(fontsize=10)
-        plt.xlabel('epochs')
-        plt.ylabel('CTC loss')
-        plt.title("CTC loss on validation data", fontsize=10)
-        st.pyplot(fig)
-
-    with st.expander("Précision"):
-
-        st.write("""
-                 Avec d = distance de Levenshtein, L la longueur du label et l la longueur de la prévision,
-                 on définit la précision d'une prévision comme :\n
-                     1 - d(label, prévision)/max(L, l)
-                 """)
-        fig = plt.figure()
-        plt.plot(precision_v12big, color='orange',
-                 label='champion - full training - greedy decoding')
-        plt.scatter([8], [0.874], color='orange',
-                    marker='*', label='beam search decoding')
-        plt.legend(fontsize=10)
-        plt.xlabel('epochs')
-        plt.ylabel('accuracy')
-        plt.title('Precision on validation data', fontsize=10)
-        st.pyplot(fig)
-
+            fig = plt.figure()
+            if v12b_p:
+                plt.plot(precision_v12big, color = 'orange', label = 'champion - full training - greedy decoding')
+                plt.scatter([8], [0.874], color = 'orange', marker = '*', label ='beam search decoding')
+            plt.legend(fontsize = 10)
+            plt.xlabel('epochs')
+            plt.ylabel('accuracy')
+            plt.title('Precision on validation data', fontsize = 10)
+            st.pyplot(fig)
+                          
     st.header('Prédictions sur données de validation')
     st.write("""
              Et voici les prédictions de notre 'champion' après un entraînement long!
@@ -807,19 +814,16 @@ def page_résultats2():
     st.header("Autres prédictions...")
 
     with st.expander("Tests"):
-        st.write("""Testons nous-mêmes notre modèle!""")
+        st.write("""Auto-test de notre modèle!""")
 
         custom_objects = {"CTC_loss": CTC_loss}
         with keras.utils.custom_object_scope(custom_objects):
             model5 = keras.models.load_model('Transcription/h5model.h5')
 
-        file_dic = {"Sample 1": "samples/begin.wav", "Sample 2": "samples/cakes.flac",
-                    "Sample 3": "samples/learn.flac", "Sample 4": "samples/proud.flac",
-                    "Sample 5": "samples/proud.wav"}
+        file_dic = {"Sample 1": "samples/proud.m4a", "Sample 2": "learn.m4a",
 
         option = st.selectbox("Sélectionnez un fichier audio à transcrire",
-                              ("Sample 1", "Sample 2", "Sample 3",
-                               "Sample 4", "Sample 5"))
+                              ("Sample 1", "Sample 2"))
 
         wav_file = file_dic[option]
 
@@ -858,6 +862,7 @@ def page_conclusion():
                 - stretching, pitch shifting
                 - autres bruits
             - Autres configurations pre-processing/augmentation/modèle
+            - Augmenter la profondeur de notre modèle
             """)
         with col2:
             st.image('Images/audioData.jpg', width=400)
