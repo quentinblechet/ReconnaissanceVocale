@@ -330,6 +330,8 @@ def predict(model, filePath):
 
 
 def page_reco_vocal():
+    signal, rate = librosa.load("Audio/1_Quentin.wav", sr=None)
+    st.write("frequency", rate)
     st.title("Reconnaissance vocale")
     st.header("Fonctionnement de la reconnaissance vocale")
     st.image('Images/image1.png')
