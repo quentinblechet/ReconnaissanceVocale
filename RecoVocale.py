@@ -597,7 +597,9 @@ def page_ctc_loss():
         st.markdown('#')
         st.markdown('#')
         st.markdown('#')
-        st.write("- Plutôt que de prédire 'le' bon alignement...")
+        alignement = st.checkbox("alignement")
+        if alignement:
+            st.write("- Plutôt que de prédire 'le' bon alignement...")
         st.markdown('#')
         st.markdown('#')
         st.markdown('#')
@@ -616,11 +618,12 @@ def page_ctc_loss():
                 'Images/script3.jpg', 'Images/script4.jpg', 'Images/script5.jpg']
         placeholder = st.empty()
         k = 0
-        while (not CTC):
-            rank = int(k % 5)
-            placeholder.image(cats[rank], width=400)
-            k += 1
-            time.sleep(1)
+        if alignement:
+            while (not CTC):
+                rank = int(k % 5)
+                placeholder.image(cats[rank], width=400)
+                k += 1
+                time.sleep(1)
         if CTC:
             st.image('Images/scripts.jpg', width=400)
 
