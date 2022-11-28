@@ -28,19 +28,23 @@ class audioFile:
 
         self.length = len(self.audioSignal)
 
-    def spectrogram(self, dt=0.025):
+    def spectrogram(self, dt=0.025, k_temp=1, k_freq=1):
 
-        return np.abs(stft(self.audioSignal, n_fft=int(self.samplingFrequency * dt),
-                           hop_length=int(self.samplingFrequency * dt)))
+        spectrogram = np.abs(stft(self.audioSignal, n_fft=int(self.samplingFrequency * dt/k_freq),
+                                  hop_length=int(self.samplingFrequency * dt * k_temp)))
 
-    def logMelSpectrogram(self, dt=0.025):
+        return spectrogram
 
-        spectrogram = self.spectrogram(dt)
+    def logMelSpectrogram(self, dt=0.025, k_temp=1, k_freq=1):
+
+        spectrogram = self.spectrogram(dt, k_temp, k_freq)
+        # soit n_fft//2 +1 = (samplingFrequency*dt/k_freq)//2 + 1
         num_spectrograms_bins = spectrogram.T.shape[-1]
 
         linear_to_mel_weight_matrix = librosa.filters.mel(
             sr=self.samplingFrequency,
-            n_fft=int(dt*self.samplingFrequency) + 1,
+            #n_fft=int(dt*self.samplingFrequency) + 1,
+            n_fft=int(dt*self.samplingFrequency/k_freq) + 1,
             n_mels=num_spectrograms_bins).T
 
         mel_spectrogram = np.tensordot(
@@ -326,12 +330,13 @@ def predict(model, filePath):
     logMelSpectrogram = audioFile(filePath, normalize=True).subsample(3).normalizeLength(17) \
         .logMelSpectrogram(k_temp=.7, k_freq=1.5)
     logMelSpectrogram = np.array([(logMelSpectrogram)])
-    return "prediction: " + decode_batch_predictions(model.predict(logMelSpectrogram))[0]
+    pred = "prediction: " + \
+        decode_batch_predictions(model.predict(logMelSpectrogram))[0]
+    st.write(pred)
+    return
 
 
 def page_reco_vocal():
-    signal, rate = librosa.load("Audio/1_Quentin.wav", sr=None)
-    st.write("frequency", rate)
     st.title("Reconnaissance vocale")
     st.header("Fonctionnement de la reconnaissance vocale")
     st.image('Images/image1.png')
@@ -521,7 +526,7 @@ def page_resultat_isolation():
         st.write("Accuracy:")
         st.write("- Modèle normal: 0.67")
         st.write("- Modèle bruité: 0.68")
-        st.write("- Modèle shift: 0.80")
+        st.write("- Modèle shift: 0.78")
         st.write("- Modèle pitch: 0.75")
         st.write("- Modèle bruité + shift + pitch: 0.65")
 
@@ -583,11 +588,11 @@ def page_demo_mot():
 
 
 def page_ctc_loss():
-    
+
     st.title("CTC loss")
-    
+
     col1, col2 = st.columns([3, 6])
-    
+
     with col1:
         st.markdown('#')
         st.markdown('#')
@@ -597,17 +602,18 @@ def page_ctc_loss():
         st.markdown('#')
         st.markdown('#')
         st.markdown('#')
-        CTC = st.checkbox("CTC: principe")     
+        CTC = st.checkbox("CTC: principe")
         if CTC:
             st.write("""
                      - ...Assigner une probabilité à chaque caractère par time-step
                      - Maximiser la probabilité des alignements compatibles avec la transcription
                      - Une contrainte: longueur de prédiction inférieure ou égale au nombre de time-steps
-                     """)        
-        
-     with col2:
+                     """)
+
+    with col2:
         st.image('Images/spectro.jpg', width=400)
-        cats = ['Images/script1.jpg', 'Images/sript2.jpg', 'Images/script3.jpg', 'Images/script4.jpg', 'Images/script5.jpg]
+        cats = ['Images/script1.jpg', 'Images/script2.jpg',
+                'Images/script3.jpg', 'Images/script4.jpg', 'Images/script5.jpg']
         placeholder = st.empty()
         k = 0
         while (not CTC):
@@ -642,26 +648,26 @@ def page_explo_data():
 
     df_full = pd.concat([df_train, df_test], axis=0)
 
-    col1, col2 = st.columns([4, 1])
+    col1, col2 = st.columns([1, 4])
 
     with col1:
         maxDuration = st.slider("duration (s)", min_value=0.0, max_value=25.0,
-                                step=.1)
+                                step=.1, value=15.0)
         timeStep = st.slider("time step (ms)", min_value=0.0, max_value=30.0, step=.5,
                              value=30.0)
     with col2:
         fig = plt.figure(figsize=(15, 10))
         plt.scatter(df_full[df_full['rootPath'] == rootPathTrain]['audio duration'],
-                df_full[df_full['rootPath'] == rootPathTrain]['label length'], c='orange', label='train files')
+                    df_full[df_full['rootPath'] == rootPathTrain]['label length'], c='orange', label='train files')
         plt.scatter(df_full[df_full['rootPath'] == rootPathTest]['audio duration'],
-                df_full[df_full['rootPath'] == rootPathTest]['label length'], c='green', label='test files')
+                    df_full[df_full['rootPath'] == rootPathTest]['label length'], c='green', label='test files')
         plt.legend(fontsize=12)
         plt.xlim(left=0, right=35)
         plt.ylim(bottom=0, top=530)
 
         plt.vlines(x=maxDuration, ymin=0, ymax=530, colors='black')
         plt.hlines(y=maxDuration/(.001*timeStep)/2,
-               xmin=0, xmax=35, colors='black')
+                   xmin=0, xmax=35, colors='black')
         plt.xlabel('audio duration (s)', fontsize=12)
         plt.ylabel('label length (nb char)', fontsize=12)
         plt.title('Label length vs audio duration', fontsize=16)
@@ -752,7 +758,7 @@ def page_résultats2():
                                    str(k) + '_d'].mean() for k in range(1, 10)]
 
     with st.expander("CTC loss sur échantillon de validation"):
-           
+
         st.write("""A partir d'une configuration de base,
              nous avons testé plusieurs options en boucle courte:
              12 epochs, 800 train / 200 test.
@@ -760,43 +766,50 @@ def page_résultats2():
              sur 9 epochs, 28 000 train / 2500 test. Enfin, nous avons mesuré la précision
              de ses prédictions à l'aide d'une métrique basée sur la distance de Levenshtein.
              """)
-                
-        col1, col2, col3, col4 = st.columns(4, gap = "small")
-            with col1:    
-                baseline = st.checkbox('V0 Baseline validation loss - 800 train / 200 test')
-            with col2:
-                v12 = st.checkbox('V12 Champion validation loss - 800 train / 200 test')
-            with col3:
-                v12b = st.checkbox('V12 Champion validation loss - 28 000 train / 2 500 test')
-            with col4:
-                v12b_p = st.checkbox('V12 Champion precision - 28 000 train / 2 500 test')
 
-      col1, col2 = st.columns(2)
-        
+        col1, col2, col3, col4 = st.columns(4, gap="small")
+        with col1:
+            baseline = st.checkbox(
+                'V0 Baseline validation loss - 800 train / 200 test')
+        with col2:
+            v12 = st.checkbox(
+                'V12 Champion validation loss - 800 train / 200 test')
+        with col3:
+            v12b = st.checkbox(
+                'V12 Champion validation loss - 28 000 train / 2 500 test')
+        with col4:
+            v12b_p = st.checkbox(
+                'V12 Champion precision - 28 000 train / 2 500 test')
+
+        col1, col2 = st.columns(2)
+
         with col1:
             fig = plt.figure()
             if baseline:
-                plt.plot(history0, color = 'black', label = 'baseline')
+                plt.plot(history0, color='black', label='baseline')
             if v12:
-                plt.plot(history12, color = 'grey', label = 'champion')
+                plt.plot(history12, color='grey', label='champion')
             if v12b:
-                plt.plot(history12big, color = 'orange', label = 'champion - full training')
-            plt.legend(fontsize = 10)
+                plt.plot(history12big, color='orange',
+                         label='champion - full training')
+            plt.legend(fontsize=10)
             plt.xlabel('epochs')
             plt.ylabel('CTC loss')
-            plt.title("CTC loss on validation data", fontsize = 10)
+            plt.title("CTC loss on validation data", fontsize=10)
             st.pyplot(fig)
         with col2:
             fig = plt.figure()
             if v12b_p:
-                plt.plot(precision_v12big, color = 'orange', label = 'champion - full training - greedy decoding')
-                plt.scatter([8], [0.874], color = 'orange', marker = '*', label ='beam search decoding')
-            plt.legend(fontsize = 10)
+                plt.plot(precision_v12big, color='orange',
+                         label='champion - full training - greedy decoding')
+                plt.scatter([8], [0.874], color='orange',
+                            marker='*', label='beam search decoding')
+            plt.legend(fontsize=10)
             plt.xlabel('epochs')
             plt.ylabel('accuracy')
-            plt.title('Precision on validation data', fontsize = 10)
+            plt.title('Precision on validation data', fontsize=10)
             st.pyplot(fig)
-                          
+
     st.header('Prédictions sur données de validation')
     st.write("""
              Et voici les prédictions de notre 'champion' après un entraînement long!
@@ -822,10 +835,11 @@ def page_résultats2():
         with keras.utils.custom_object_scope(custom_objects):
             model5 = keras.models.load_model('Transcription/h5model.h5')
 
-        file_dic = {"Sample 1": "samples/proud.m4a", "Sample 2": "learn.m4a",
+        file_dic = {"Sample 1": "samples/proud.m4a",
+                    "Sample 2": "samples/learn.m4a", }
 
-        option = st.selectbox("Sélectionnez un fichier audio à transcrire",
-                              ("Sample 1", "Sample 2"))
+        option = st.selectbox(
+            "Sélectionnez un fichier audio à transcrire", ("Sample 1", "Sample 2"))
 
         wav_file = file_dic[option]
 
@@ -835,8 +849,8 @@ def page_résultats2():
                 st.audio(wav_file)
         with col2:
             if wav_file:
-                st.button("predict", on_click=predict(
-                    model5, filePath=wav_file))
+                if st.button("predict"):
+                    predict(model5, filePath=wav_file)
 
 
 def page_conclusion():
@@ -844,7 +858,7 @@ def page_conclusion():
 
     st.markdown("###")
     st.write("""
-             Tous nos remerciements à DataScientest et plus particulièrement à 
+             Tous nos remerciements à DataScientest et plus particulièrement à
              notre chef de cohorte Romain Godet et à notre mentor Paul Lestrat!
              """)
     st.markdown("###")
@@ -859,7 +873,7 @@ def page_conclusion():
             st.markdown("#")
             st.write("""
             - (Beaucoup) plus de données d'entraînement
-                - Deep Speech 2: plus de 11 000h audio! 
+                - Deep Speech 2: plus de 11 000h audio!
             - Autres augmentations de données:
                 - stretching, pitch shifting
                 - autres bruits
