@@ -7,4 +7,4 @@ tensorflow
 librosa
 numpy
 ffmpeg
-soundfile
+libsndfile1
